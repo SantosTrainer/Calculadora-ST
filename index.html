@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Progresión de Cargas | Entrenador Osneider</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #08080b;
+  --surf:     #0f0f14;
+  --card:     #151519;
+  --card2:    #1a1a20;
+  --border:   #252530;
+  --border2:  #1e1e28;
+  --accent:   #c8ff00;
+  --accent2:  #ff3c3c;
+  --blue:     #4d9fff;
+  --orange:   #ff9500;
+  --text:     #efefef;
+  --muted:    #5a5a6e;
+  --muted2:   #3a3a48;
+  --display:  'Bebas Neue', sans-serif;
+  --mono:     'JetBrains Mono', monospace;
+  --body:     'DM Sans', sans-serif;
+  --r:        4px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--body);min-height:100vh;overflow-x:hidden}
+
+/* GRID BG */
+body::before{content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(200,255,0,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(200,255,0,.025) 1px,transparent 1px);
+  background-size:48px 48px;pointer-events:none;z-index:0}
+
+/* NOISE */
+body::after{content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  opacity:.4;pointer-events:none;z-index:0}
+
+.wrap{position:relative;z-index:1;max-width:980px;margin:0 auto;padding:40px 20px 100px}
+
+/* ── HEADER ── */
+header{text-align:center;margin-bottom:52px;animation:fadeDown .6s ease both}
+.brand-chip{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);background:rgba(200,255,0,.07);border:1px solid rgba(200,255,0,.18);padding:5px 16px;border-radius:2px;margin-bottom:20px}
+.brand-chip::before{content:'';width:6px;height:6px;background:var(--accent);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+h1{font-family:var(--display);font-size:clamp(48px,9vw,96px);letter-spacing:.04em;line-height:.9;color:var(--text)}
+h1 em{color:var(--accent);font-style:normal}
+.subtitle{margin-top:14px;color:var(--muted);font-size:13px;font-weight:300;letter-spacing:.06em}
+
+/* ── MODE SWITCHER ── */
+.mode-switcher{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:32px;animation:fadeUp .5s .1s ease both}
+.mode-btn{padding:18px 24px;background:var(--surf);border:none;color:var(--muted);font-family:var(--display);font-size:20px;letter-spacing:.08em;cursor:pointer;transition:all .25s;display:flex;align-items:center;justify-content:center;gap:10px}
+.mode-btn:first-child{border-right:1px solid var(--border)}
+.mode-btn .mode-icon{font-size:22px}
+.mode-btn.active{background:var(--card);color:var(--text)}
+.mode-btn.active.compound::after{content:'';display:block;position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--accent)}
+.mode-btn{position:relative}
+.mode-btn.active .mode-accent{color:var(--accent)}
+.mode-btn.active.isolated .mode-accent{color:var(--blue)}
+
+/* ── FORM CARD ── */
+.form-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:36px;margin-bottom:28px;animation:fadeUp .55s .15s ease both}
+.section-label{font-family:var(--mono);font-size:9px;letter-spacing:.25em;text-transform:uppercase;color:var(--muted);margin-bottom:18px;display:flex;align-items:center;gap:10px}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px;margin-bottom:24px}
+.field{display:flex;flex-direction:column;gap:7px}
+.field label{font-family:var(--mono);font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.field label .req{color:var(--accent);margin-left:2px}
+
+.input-row{display:flex}
+.input-row input{flex:1;border-radius:3px 0 0 3px;border-right:none!important}
+.input-row select{border-radius:0 3px 3px 0;width:auto;min-width:58px;background:var(--card2);padding:0 10px;cursor:pointer}
+
+input,select,.range-input{background:var(--surf);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:15px;padding:11px 13px;border-radius:3px;outline:none;transition:border-color .2s,box-shadow .2s;width:100%;-webkit-appearance:none}
+input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(200,255,0,.08)}
+input.invalid{border-color:var(--accent2)!important}
+select option{background:var(--card)}
+
+.k-hint{font-family:var(--mono);font-size:10px;color:var(--accent);margin-top:3px;min-height:14px}
+
+/* level buttons */
+.level-sel{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.lvl-btn{background:var(--surf);border:1px solid var(--border);color:var(--muted);font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:11px 6px;border-radius:3px;cursor:pointer;transition:all .2s;text-align:center}
+.lvl-btn .li{display:block;font-size:16px;margin-bottom:3px}
+.lvl-btn:hover{border-color:var(--accent);color:var(--accent)}
+.lvl-btn.active{background:rgba(200,255,0,.08);border-color:var(--accent);color:var(--accent)}
+
+/* pct slider */
+.slider-row{display:flex;align-items:center;gap:14px;margin-bottom:6px}
+.slider-row input[type=range]{-webkit-appearance:none;height:3px;background:var(--border);border:none;border-radius:2px;padding:0;cursor:pointer;flex:1}
+.slider-row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;background:var(--accent);border-radius:50%;cursor:pointer}
+.pct-val{font-family:var(--display);font-size:24px;color:var(--accent);min-width:52px;text-align:right}
+
+/* toggle */
+.toggle-row{display:flex;align-items:center;gap:14px;padding:14px 18px;background:var(--surf);border:1px solid var(--border);border-radius:3px;margin-bottom:24px}
+.toggle-label{flex:1;font-size:13px}
+.toggle-label small{display:block;color:var(--muted);font-size:11px;margin-top:2px}
+.toggle{position:relative;width:42px;height:23px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.tog-track{position:absolute;inset:0;background:var(--border);border-radius:23px;cursor:pointer;transition:background .25s}
+.tog-track::after{content:'';position:absolute;left:3px;top:3px;width:17px;height:17px;background:var(--muted);border-radius:50%;transition:transform .25s,background .25s}
+.toggle input:checked+.tog-track{background:rgba(200,255,0,.15)}
+.toggle input:checked+.tog-track::after{transform:translateX(19px);background:var(--accent)}
+
+/* buttons */
+.btn-row{display:flex;gap:10px;flex-wrap:wrap}
+.btn{font-family:var(--display);font-size:19px;letter-spacing:.1em;padding:14px 30px;border:none;border-radius:3px;cursor:pointer;transition:all .2s;flex:1;min-width:130px}
+.btn-primary{background:var(--accent);color:#000}
+.btn-primary:hover{background:#d4ff1a;transform:translateY(-1px);box-shadow:0 8px 28px rgba(200,255,0,.18)}
+.btn-secondary{background:transparent;color:var(--muted);border:1px solid var(--border)}
+.btn-secondary:hover{border-color:var(--muted);color:var(--text)}
+
+/* error */
+.err{color:var(--accent2);font-family:var(--mono);font-size:10px;margin-top:4px;display:none}
+.err.show{display:block}
+
+/* ── RESULT ── */
+#result{display:none}
+#result.on{display:block;animation:fadeUp .5s ease both}
+
+/* stats bar */
+.stats-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:28px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:3px;padding:14px 18px}
+.stat-lbl{font-family:var(--mono);font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.stat-val{font-family:var(--display);font-size:30px;letter-spacing:.04em;color:var(--accent)}
+.stat-sub{font-family:var(--mono);font-size:8px;color:var(--muted);margin-top:2px}
+
+/* result header */
+.res-head{display:flex;align-items:baseline;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.res-head h2{font-family:var(--display);font-size:30px;letter-spacing:.06em}
+.tag{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;padding:3px 10px;border-radius:2px}
+.tag-ex{color:var(--accent);background:rgba(200,255,0,.07);border:1px solid rgba(200,255,0,.18)}
+.tag-lvl-p{color:#64dc64;background:rgba(100,220,100,.08);border:1px solid rgba(100,220,100,.2)}
+.tag-lvl-i{color:var(--accent);background:rgba(200,255,0,.08);border:1px solid rgba(200,255,0,.2)}
+.tag-lvl-a{color:var(--accent2);background:rgba(255,60,60,.08);border:1px solid rgba(255,60,60,.2)}
+.tag-iso{color:var(--blue);background:rgba(77,159,255,.08);border:1px solid rgba(77,159,255,.2)}
+
+/* copy btn */
+.copy-row{display:flex;justify-content:flex-end;margin-bottom:16px}
+.btn-copy{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:8px 18px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:3px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:7px}
+.btn-copy:hover{border-color:var(--accent);color:var(--accent)}
+.btn-copy.ok{border-color:#64dc64;color:#64dc64}
+
+/* ── TABLE ── */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--r);margin-bottom:24px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+thead tr{background:#0a0a0e;border-bottom:1px solid var(--border)}
+thead th{font-family:var(--mono);font-size:8.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);padding:11px 14px;text-align:left;white-space:nowrap}
+tbody tr{border-bottom:1px solid var(--border2);transition:background .15s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:rgba(255,255,255,.015)}
+tbody td{padding:13px 14px;vertical-align:middle}
+
+/* day separator rows */
+tr.day1-row{background:rgba(200,255,0,.025)}
+tr.day1-row td:first-child{border-left:3px solid var(--accent);padding-left:11px}
+tr.day2-row{background:rgba(77,159,255,.02)}
+tr.day2-row td:first-child{border-left:3px solid var(--blue);padding-left:11px}
+tr.peak-row{background:rgba(255,60,60,.04)!important}
+tr.peak-row td:first-child{border-left-color:var(--accent2)!important}
+tr.deload-row{background:rgba(77,159,255,.025)!important}
+tr.deload-row td:first-child{border-left:3px solid var(--blue);padding-left:11px}
+tr.sem-separator td{padding:0;height:6px;background:var(--bg);border-bottom:1px solid var(--border)}
+
+/* week cell */
+.wk{font-family:var(--display);font-size:20px;color:var(--muted);width:42px;line-height:1}
+.wk-sub{font-family:var(--mono);font-size:7px;letter-spacing:.12em;text-transform:uppercase;margin-top:1px}
+.wk-sub.d1{color:var(--accent)}
+.wk-sub.d2{color:var(--blue)}
+.wk-sub.deload{color:var(--blue)}
+.wk-sub.iso{color:var(--blue)}
+
+/* values */
+.vbig{font-family:var(--mono);font-size:16px;font-weight:600;color:var(--text)}
+.vunit{font-family:var(--mono);font-size:9px;color:var(--muted);margin-left:2px}
+.ton{font-family:var(--mono);font-size:13px}
+.ton small{color:var(--muted);font-size:9px}
+
+/* rpe pills */
+.rpe{display:inline-block;font-family:var(--mono);font-size:10px;padding:3px 9px;border-radius:20px;font-weight:700;white-space:nowrap}
+.rpe-low  {background:rgba(100,220,100,.1);color:#64dc64;border:1px solid rgba(100,220,100,.2)}
+.rpe-mid  {background:rgba(200,255,0,.09);color:var(--accent);border:1px solid rgba(200,255,0,.18)}
+.rpe-high {background:rgba(255,149,0,.1);color:var(--orange);border:1px solid rgba(255,149,0,.2)}
+.rpe-peak {background:rgba(255,60,60,.1);color:var(--accent2);border:1px solid rgba(255,60,60,.2)}
+.rpe-dl   {background:rgba(77,159,255,.1);color:var(--blue);border:1px solid rgba(77,159,255,.2)}
+
+.focus{font-size:11px;color:var(--muted);max-width:155px;line-height:1.45}
+
+/* ── COACH NOTES ── */
+.notes{border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:20px}
+.notes-hd{background:#0a0a0e;padding:13px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.notes-hd .dot{width:7px;height:7px;background:var(--accent);border-radius:50%}
+.notes-hd h3{font-family:var(--display);font-size:17px;letter-spacing:.06em}
+.note-row{display:grid;grid-template-columns:70px 1fr;border-bottom:1px solid var(--border2)}
+.note-row:last-child{border-bottom:none}
+.note-wk{background:#0a0a0e;display:flex;align-items:center;justify-content:center;padding:14px;border-right:1px solid var(--border)}
+.note-wk span{font-family:var(--display);font-size:18px;color:var(--muted)}
+.note-cnt{padding:14px 18px}
+.note-ttl{font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;margin-bottom:4px}
+.note-ttl.c1{color:#64dc64}.note-ttl.c2{color:var(--accent)}.note-ttl.c3{color:var(--orange)}.note-ttl.c4{color:var(--accent2)}.note-ttl.c5{color:var(--blue)}
+.note-txt{font-size:11.5px;color:var(--muted);line-height:1.65}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeDown{from{opacity:0;transform:translateY(-18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── RESPONSIVE ── */
+@media(max-width:620px){
+  .form-card{padding:22px 16px}
+  .btn{font-size:16px;padding:12px 18px}
+  .note-row{grid-template-columns:48px 1fr}
+  thead th:nth-child(n+6){display:none}
+  tbody td:nth-child(n+6){display:none}
+  .vbig{font-size:14px}
+  h1{line-height:1}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- HEADER -->
+<header>
+  <div class="brand-chip">⚡ Entrenador Osneider</div>
+  <h1>PROGRESIÓN<br><em>DE CARGAS</em></h1>
+  <p class="subtitle">Frecuencia 2 · Compuestos + Aislados · Ciencia aplicada al entrenamiento</p>
+</header>
+
+<!-- MODE SWITCHER -->
+<div class="mode-switcher">
+  <button class="mode-btn compound active" id="btn-mode-comp" onclick="setMode('compound')">
+    <span class="mode-icon">🏋️</span>
+    <span><span class="mode-accent">COMPUESTOS</span> — FREC. 2</span>
+  </button>
+  <button class="mode-btn isolated" id="btn-mode-iso" onclick="setMode('isolated')">
+    <span class="mode-icon">💪</span>
+    <span><span class="mode-accent">AISLADOS</span> — DOBLE PROG.</span>
+  </button>
+</div>
+
+<!-- ═══════════════════════════════ FORM ═══════════════════════════════ -->
+<div class="form-card">
+
+  <!-- EJERCICIO + NIVEL (siempre visibles) -->
+  <div class="section-label">Datos del Ejercicio</div>
+  <div class="form-grid" style="margin-bottom:20px">
+    <div class="field" style="grid-column:1/-1">
+      <label>Nombre del Ejercicio <span class="req">*</span></label>
+      <input type="text" id="ejercicio" placeholder="Ej: Press Banca, Curl Bíceps, Extensión…">
+    </div>
+    <div class="field" style="grid-column:1/-1">
+      <label>Nivel del Atleta <span class="req">*</span></label>
+      <div class="level-sel">
+        <button class="lvl-btn" onclick="setLevel('principiante',this)"><span class="li">🌱</span>Principiante</button>
+        <button class="lvl-btn" onclick="setLevel('intermedio',this)"><span class="li">🔥</span>Intermedio</button>
+        <button class="lvl-btn" onclick="setLevel('avanzado',this)"><span class="li">⚡</span>Avanzado</button>
+      </div>
+      <div class="err" id="err-nivel">Selecciona un nivel.</div>
+    </div>
+  </div>
+
+  <!-- COMPOUND FIELDS -->
+  <div id="compound-fields">
+    <div class="section-label">Parámetros de Carga</div>
+    <div class="form-grid">
+      <div class="field">
+        <label>Peso Inicial — Día 1 (P) <span class="req">*</span></label>
+        <div class="input-row">
+          <input type="number" id="peso" placeholder="0.0" min="0" step="0.5">
+          <select id="unidad"><option value="kg">kg</option><option value="lb">lb</option></select>
+        </div>
+        <div class="err" id="err-peso">Ingresa un peso válido.</div>
+      </div>
+      <div class="field">
+        <label>Series Iniciales (S) <span class="req">*</span></label>
+        <input type="number" id="series" placeholder="Ej: 4" min="1" max="10" step="1">
+        <div class="err" id="err-series">Series válidas: 1–10.</div>
+      </div>
+      <div class="field">
+        <label>Incremento Semanal (K) <span class="req">*</span></label>
+        <div class="input-row">
+          <input type="number" id="incremento" placeholder="0.0" min="0" step="0.25">
+          <select id="unidad-k"><option value="kg">kg</option><option value="lb">lb</option></select>
+        </div>
+        <div class="k-hint" id="k-hint"></div>
+        <div class="err" id="err-k">Ingresa un incremento válido.</div>
+      </div>
+    </div>
+
+    <div class="section-label">% Intensidad Día 2 (Hipertrofia)</div>
+    <div class="field" style="margin-bottom:24px">
+      <label>Día 2 trabajará al <span id="pct-lbl" style="color:var(--accent)">75</span>% del peso del Día 1</label>
+      <div class="slider-row">
+        <input type="range" id="pct-slider" min="60" max="90" value="75" step="5" oninput="updatePct(this.value)">
+        <span class="pct-val" id="pct-display">75%</span>
+      </div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--muted)">60% mínimo (recuperación) → 90% máximo (casi paridad)</div>
+    </div>
+  </div>
+
+  <!-- ISOLATED FIELDS -->
+  <div id="isolated-fields" style="display:none">
+    <div class="section-label">Parámetros de Carga</div>
+    <div class="form-grid">
+      <div class="field">
+        <label>Peso Inicial (P) <span class="req">*</span></label>
+        <div class="input-row">
+          <input type="number" id="peso-iso" placeholder="0.0" min="0" step="0.5">
+          <select id="unidad-iso"><option value="kg">kg</option><option value="lb">lb</option></select>
+        </div>
+        <div class="err" id="err-peso-iso">Ingresa un peso válido.</div>
+      </div>
+      <div class="field">
+        <label>Incremento por Bloque (K) <span class="req">*</span></label>
+        <div class="input-row">
+          <input type="number" id="incremento-iso" placeholder="0.0" min="0" step="0.25">
+          <select id="unidad-iso-k"><option value="kg">kg</option><option value="lb">lb</option></select>
+        </div>
+        <div class="k-hint" id="k-hint-iso"></div>
+        <div class="err" id="err-k-iso">Ingresa un incremento válido.</div>
+      </div>
+    </div>
+    <div style="padding:12px 16px;background:rgba(77,159,255,.06);border:1px solid rgba(77,159,255,.15);border-radius:3px;margin-bottom:24px">
+      <div style="font-family:var(--mono);font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--blue);margin-bottom:4px">Lógica Doble Progresión</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.6">S1: 15×3 → S2: 15×4 → S3: 20×3 → S4: 20×4 · El peso sube al inicio del siguiente bloque. Para avanzados S4 llega a 25 reps.</div>
+    </div>
+  </div>
+
+  <!-- DELOAD TOGGLE -->
+  <div class="toggle-row">
+    <div class="toggle-label">
+      Semana 5 — Descarga (Deload)
+      <small>Recuperación activa al ~55% del volumen. Recomendado científicamente.</small>
+    </div>
+    <label class="toggle">
+      <input type="checkbox" id="deload-tog" checked>
+      <span class="tog-track"></span>
+    </label>
+  </div>
+
+  <!-- BUTTONS -->
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="generar()">⚡ Generar Plan</button>
+    <button class="btn btn-secondary" onclick="limpiar()">✕ Limpiar</button>
+  </div>
+</div><!-- /form-card -->
+
+<!-- ═══════════════════════════════ RESULT ═══════════════════════════════ -->
+<div id="result">
+  <div class="stats-bar" id="stats-bar"></div>
+  <div class="res-head">
+    <h2>PLAN SEMANAL</h2>
+    <span class="tag tag-ex" id="res-ej"></span>
+    <span class="tag" id="res-lvl"></span>
+    <span class="tag" id="res-mode-tag"></span>
+  </div>
+  <div class="copy-row">
+    <button class="btn-copy" id="btn-copy" onclick="copiar()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      Copiar tabla
+    </button>
+  </div>
+  <div class="tbl-wrap">
+    <table id="tabla">
+      <thead id="tabla-head"></thead>
+      <tbody id="tabla-body"></tbody>
+    </table>
+  </div>
+  <div class="notes" id="notes-section">
+    <div class="notes-hd"><div class="dot"></div><h3>NOTAS DEL ENTRENADOR OSNEIDER</h3></div>
+    <div id="notas-body"></div>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+
+<script>
+// ═══════════ STATE ═══════════
+let modo = 'compound';
+let nivel = null;
+let pct = 75;
+
+// ═══════════ MODE ═══════════
+function setMode(m) {
+  modo = m;
+  document.getElementById('btn-mode-comp').classList.toggle('active', m === 'compound');
+  document.getElementById('btn-mode-iso').classList.toggle('active', m === 'isolated');
+  document.getElementById('compound-fields').style.display = m === 'compound' ? '' : 'none';
+  document.getElementById('isolated-fields').style.display = m === 'isolated' ? '' : 'none';
+  document.getElementById('result').classList.remove('on');
+  actualizarKHint();
+}
+
+// ═══════════ LEVEL ═══════════
+function setLevel(n, el) {
+  nivel = n;
+  document.querySelectorAll('.lvl-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('err-nivel').classList.remove('show');
+  actualizarKHint();
+  syncUnidades();
+}
+
+// ═══════════ PCT ═══════════
+function updatePct(v) {
+  pct = parseInt(v);
+  document.getElementById('pct-lbl').textContent = v;
+  document.getElementById('pct-display').textContent = v + '%';
+}
+
+// ═══════════ K HINTS ═══════════
+const K_SUGERIDA = {
+  principiante: { kg: 2.5,   lb: 5   },
+  intermedio:   { kg: 2.5,   lb: 5   },
+  avanzado:     { kg: 1.25,  lb: 2.5 },
+};
+const K_ISO = {
+  principiante: { kg: 2.5, lb: 5 },
+  intermedio:   { kg: 2.5, lb: 5 },
+  avanzado:     { kg: 1.25,lb: 2.5 },
+};
+
+function actualizarKHint() {
+  if (!nivel) return;
+  const u  = document.getElementById('unidad').value;
+  const uk = document.getElementById('unidad-k').value;
+  const ui = document.getElementById('unidad-iso').value;
+
+  const h1 = document.getElementById('k-hint');
+  const h2 = document.getElementById('k-hint-iso');
+  const ki = document.getElementById('incremento');
+  const kiso = document.getElementById('incremento-iso');
+
+  if (!ki.dataset.edited) { ki.value = K_SUGERIDA[nivel][uk]; }
+  if (!kiso.dataset.edited) { kiso.value = K_ISO[nivel][ui]; }
+  h1.textContent = `→ Sugerido (${nivel}): ${K_SUGERIDA[nivel][uk]} ${uk}`;
+  h2.textContent = `→ Sugerido (${nivel}): ${K_ISO[nivel][ui]} ${ui}`;
+}
+
+function syncUnidades() {
+  const u = document.getElementById('unidad').value;
+  document.getElementById('unidad-k').value = u;
+  document.getElementById('unidad-iso').value = u;
+  document.getElementById('unidad-iso-k').value = u;
+}
+
+document.getElementById('incremento').addEventListener('input', function(){ this.dataset.edited='1'; });
+document.getElementById('incremento-iso').addEventListener('input', function(){ this.dataset.edited='1'; });
+document.getElementById('unidad').addEventListener('change', function(){
+  document.getElementById('unidad-k').value = this.value;
+  delete document.getElementById('incremento').dataset.edited;
+  actualizarKHint();
+});
+document.getElementById('unidad-k').addEventListener('change', function(){
+  delete document.getElementById('incremento').dataset.edited;
+  actualizarKHint();
+});
+document.getElementById('unidad-iso').addEventListener('change', function(){
+  document.getElementById('unidad-iso-k').value = this.value;
+  delete document.getElementById('incremento-iso').dataset.edited;
+  actualizarKHint();
+});
+
+// ═══════════ ROUND TO K ═══════════
+function roundToK(val, k) {
+  if (!k || k <= 0) return +val.toFixed(2);
+  return Math.round(val / k) * k;
+}
+
+// ═══════════ COMPOUND DATA ═══════════
+const COMP = {
+  principiante: {
+    semanas: [
+      { repsD1:'8',  serDeltaD1:0, rpeD1:'7',   rpeClsD1:'rpe-low',  repsD2:'12', serDeltaD2:0, rpeD2:'6',   rpeClsD2:'rpe-low',  enfoqueD1:'Patrón motor — técnica base',      enfoqueD2:'Volumen suave — consolidar' },
+      { repsD1:'8',  serDeltaD1:0, rpeD1:'7–8', rpeClsD1:'rpe-low',  repsD2:'12', serDeltaD2:0, rpeD2:'7',   rpeClsD2:'rpe-low',  enfoqueD1:'Carga + técnica consolidada',      enfoqueD2:'Volumen — repetir el estímulo' },
+      { repsD1:'6',  serDeltaD1:0, rpeD1:'8',   rpeClsD1:'rpe-mid',  repsD2:'10', serDeltaD2:0, rpeD2:'7–8', rpeClsD2:'rpe-mid',  enfoqueD1:'Primera tensión mecánica real',    enfoqueD2:'Sobrecarga hipertrófica' },
+      { repsD1:'6',  serDeltaD1:0, rpeD1:'8–9', rpeClsD1:'rpe-high', repsD2:'10', serDeltaD2:1, rpeD2:'8',   rpeClsD2:'rpe-mid',  enfoqueD1:'Pico de fuerza del bloque',        enfoqueD2:'Pico de volumen — +1 serie', peak:true },
+    ],
+    notas: [
+      {ttl:'D1 S1 — PATRÓN MOTOR',cls:'c1',txt:'Aprende el movimiento con cargas manejables. 8 reps permite suficiente volumen para fijar el patrón sin acumular fatiga técnica. Cada rep debe verse idéntica.'},
+      {ttl:'D2 S1 — VOLUMEN SUAVE',cls:'c1',txt:'El 75% del Día 1 coloca la carga en la zona óptima de hipertrofia. 12 reps con control total. No es un día fácil; es un día de calidad de movimiento.'},
+      {ttl:'D1 S2 — CARGA + TÉCNICA',cls:'c2',txt:'El patrón ya está más estable. Añadimos K de peso y mantenemos el mismo volumen. El sistema nervioso consolida la coordinación intermuscular.'},
+      {ttl:'D2 S2 — REPETIR ESTÍMULO',cls:'c2',txt:'Repetir el esquema de la semana anterior con carga ligeramente mayor refuerza la adaptación. La consistencia es el mejor principio para el principiante.'},
+      {ttl:'D1 S3 — TENSIÓN MECÁNICA',cls:'c3',txt:'Bajamos reps a 6 y subimos carga. Esto activa las fibras de tipo II y genera tensión mecánica real. El principiante experimenta aquí la verdadera sobrecarga.'},
+      {ttl:'D2 S3 — SOBRECARGA HIPERTRÓFICA',cls:'c3',txt:'10 reps al 75% del peso del Día 3 sitúa al atleta en la zona de máxima síntesis proteica muscular. Esfuerzo percibido alto pero controlado.'},
+      {ttl:'D1 S4 — PICO DE FUERZA',cls:'c4',txt:'Mantenemos la carga máxima del bloque. 6 reps al límite técnico. Este es el estímulo nervioso más alto que hemos generado; el cuerpo necesitará el deload para asimilarlo.'},
+      {ttl:'D2 S4 — PICO DE VOLUMEN',cls:'c4',txt:'Serie extra en el día de hipertrofia. El volumen total del bloque alcanza su máximo. Esta combinación de pico de fuerza (D1) + pico de volumen (D2) maximiza el estrés adaptativo.'},
+    ]
+  },
+  intermedio: {
+    semanas: [
+      { repsD1:'6',   serDeltaD1:0, rpeD1:'7–8', rpeClsD1:'rpe-low',  repsD2:'10', serDeltaD2:0, rpeD2:'7',   rpeClsD2:'rpe-low',  enfoqueD1:'Activación base — fuerza inicial',  enfoqueD2:'Hipertrofia — volumen base' },
+      { repsD1:'5',   serDeltaD1:0, rpeD1:'8',   rpeClsD1:'rpe-mid',  repsD2:'10', serDeltaD2:0, rpeD2:'8',   rpeClsD2:'rpe-mid',  enfoqueD1:'Sobrecarga lineal de fuerza',       enfoqueD2:'Sobrecarga de volumen' },
+      { repsD1:'4',   serDeltaD1:0, rpeD1:'8–9', rpeClsD1:'rpe-high', repsD2:'8',  serDeltaD2:0, rpeD2:'8–9', rpeClsD2:'rpe-high', enfoqueD1:'Tensión mecánica máxima',           enfoqueD2:'Tensión + hipertrofia alta' },
+      { repsD1:'3',   serDeltaD1:1, rpeD1:'9–10',rpeClsD1:'rpe-peak', repsD2:'8',  serDeltaD2:1, rpeD2:'9',   rpeClsD2:'rpe-peak', enfoqueD1:'Overreaching — pico de fuerza',    enfoqueD2:'Pico de volumen hipertrófico', peak:true },
+    ],
+    notas: [
+      {ttl:'D1 S1 — ACTIVACIÓN FUERZA',cls:'c1',txt:'6 reps con carga base. Para el intermedio esta semana tiene un propósito claro: activar el sistema nervioso central y preparar los tendones para las cargas máximas que vienen.'},
+      {ttl:'D2 S1 — HIPERTROFIA BASE',cls:'c1',txt:'10 reps al 75% construye el volumen muscular que sustentará las ganancias de fuerza. No subestimes este día — el volumen acumulado aquí es lo que hace crecer al músculo.'},
+      {ttl:'D1 S2 — SOBRECARGA LINEAL',cls:'c2',txt:'Menos reps, más peso. La progresión de fuerza en el intermedio es la piedra angular. Cada kilo añadido aquí representa una adaptación neuromuscular real.'},
+      {ttl:'D2 S2 — SOBRECARGA VOLUMEN',cls:'c2',txt:'Mantenemos reps pero subimos peso. El doble estímulo (fuerza D1 + volumen D2) genera una señal anabólica superior a entrenar solo un día.'},
+      {ttl:'D1 S3 — TENSIÓN MÁXIMA',cls:'c3',txt:'4 reps con la carga más alta hasta ahora. Esta zona de intensidad recluta el máximo de unidades motoras y estimula la hipertrofia miofibrilar. Técnica impecable en cada rep.'},
+      {ttl:'D2 S3 — TENSIÓN + HIPERTROFIA',cls:'c3',txt:'8 reps al 75% de una carga ya alta crea tensión muscular significativa. El músculo está siendo atacado desde el vector de fuerza (D1) y el vector de volumen (D2) en la misma semana.'},
+      {ttl:'D1 S4 — OVERREACHING',cls:'c4',txt:'Serie extra + 3 reps al RPE 9–10. Esto es overreaching voluntario y controlado. El sistema nervioso está al máximo. Sin deload esta semana sería sobreentrenamiento; con deload, es la clave del progreso.'},
+      {ttl:'D2 S4 — PICO HIPERTRÓFICO',cls:'c4',txt:'El volumen más alto del bloque. 5 series × 8 reps al 75% de tu máximo de este bloque. La acumulación total de trabajo de esta semana desencadenará la supercompensación durante el deload.'},
+    ]
+  },
+  avanzado: {
+    semanas: [
+      { repsD1:'5',   serDeltaD1:0, rpeD1:'7–8', rpeClsD1:'rpe-low',  repsD2:'10', serDeltaD2:0, rpeD2:'7–8', rpeClsD2:'rpe-low',  enfoqueD1:'Potenciación basal — activación',   enfoqueD2:'Hipertrofia — activación' },
+      { repsD1:'4',   serDeltaD1:1, rpeD1:'8–9', rpeClsD1:'rpe-high', repsD2:'8',  serDeltaD2:1, rpeD2:'8–9', rpeClsD2:'rpe-high', enfoqueD1:'Sobrecarga + volumen fuerza',       enfoqueD2:'Volumen + intensidad sube' },
+      { repsD1:'3',   serDeltaD1:1, rpeD1:'9',   rpeClsD1:'rpe-peak', repsD2:'6',  serDeltaD2:1, rpeD2:'9',   rpeClsD2:'rpe-peak', enfoqueD1:'Tensión extrema — pico nervioso',  enfoqueD2:'Tensión hipertrófica máxima' },
+      { repsD1:'2–3', serDeltaD1:2, rpeD1:'9–10',rpeClsD1:'rpe-peak', repsD2:'6',  serDeltaD2:2, rpeD2:'9–10',rpeClsD2:'rpe-peak', enfoqueD1:'Pico absoluto — fallo técnico',    enfoqueD2:'Pico volumen — fallo técnico', peak:true },
+    ],
+    notas: [
+      {ttl:'D1 S1 — POTENCIACIÓN BASAL',cls:'c1',txt:'Para el atleta avanzado la semana 1 no es fácil. Es una potenciación post-deload o post-bloque. 5×5 activa el sistema nervioso sin generar deuda de fatiga antes del pico.'},
+      {ttl:'D2 S1 — HIPERTROFIA ACTIVACIÓN',cls:'c1',txt:'10 reps al 75% con 5 series genera ya un tonelaje considerable. El avanzado tiene una capacidad de recuperación mayor, por lo que puede manejar este volumen desde la semana 1.'},
+      {ttl:'D1 S2 — SOBRECARGA + VOLUMEN',cls:'c2',txt:'Una serie más y menos reps = más tensión por rep con mayor volumen total. El avanzado necesita este doble estímulo para continuar progresando donde el principiante con K ya no mejora.'},
+      {ttl:'D2 S2 — INTENSIDAD EN ASCENSO',cls:'c2',txt:'8 reps + serie extra. El volumen sube de forma paralela al Día 1. La doble progresión simultánea (fuerza + hipertrofia) es lo que diferencia al programa de un avanzado.'},
+      {ttl:'D1 S3 — TENSIÓN EXTREMA',cls:'c3',txt:'3 reps con carga máxima del bloque. RPE 9. Esta zona activa la ruta mTOR de forma máxima. La recuperación entre series debe ser completa (3–5 min). No sacrifiques descanso por ritmo.'},
+      {ttl:'D2 S3 — TENSIÓN HIPERTRÓFICA',cls:'c3',txt:'6 reps con una carga alta (75% del peso más pesado del bloque). La combinación de alta tensión en D1 y alto volumen en D2 en la misma semana crea el estrés metabólico y mecánico máximo simultáneo.'},
+      {ttl:'D1 S4 — PICO ABSOLUTO',cls:'c4',txt:'2–3 reps con el peso más alto que has movido en el bloque. 2 series adicionales respecto a la semana 1. Overreaching real. Cada rep debe ser al límite técnico absoluto. Esta semana define el bloque.'},
+      {ttl:'D2 S4 — PICO DE VOLUMEN',cls:'c4',txt:'7 series × 6 reps al 75% del peso pico. Este es el tonelaje más alto de todo el bloque. La combinación de este volumen extremo con el pico de fuerza del D1 genera el estímulo adaptativo máximo. El deload es obligatorio.'},
+    ]
+  }
+};
+
+// ═══════════ ISOLATED DATA ═══════════
+const ISO_REPS = {
+  principiante: { s1:15, s2:15, s3:20, s4:20 },
+  intermedio:   { s1:15, s2:15, s3:20, s4:20 },
+  avanzado:     { s1:15, s2:15, s3:20, s4:25 },
+};
+const ISO_SERIES = { s1:3, s2:4, s3:3, s4:4 };
+const ISO_RPE = {
+  principiante: ['6–7','rpe-low', '7','rpe-low',    '7–8','rpe-mid',  '8','rpe-mid'],
+  intermedio:   ['7','rpe-low',   '7–8','rpe-mid',  '8','rpe-mid',    '8–9','rpe-high'],
+  avanzado:     ['7–8','rpe-mid', '8','rpe-mid',    '8–9','rpe-high', '9','rpe-peak'],
+};
+const ISO_ENFOQUE = [
+  'Aprendizaje del rango completo',
+  'Volumen: +1 serie, mismas reps',
+  'Reps: salta a rango mayor, –1 serie',
+  'Pico: máximo volumen del bloque',
+];
+const ISO_NOTAS = {
+  principiante: [
+    {ttl:'S1 — RANGO COMPLETO',cls:'c1',txt:'15 reps con control total. El objetivo es llegar al fallo técnico en la rep 15. Si puedes hacer 18 sin problema, el peso es muy liviano. Ajusta antes de comenzar.'},
+    {ttl:'S2 — SOBRECARGA DE VOLUMEN',cls:'c2',txt:'Mismas reps, una serie más. Este es el principio de sobrecarga de volumen. El tonelaje sube sin aumentar la intensidad por rep. El músculo aislado necesita este acumulado.'},
+    {ttl:'S3 — SALTO DE REPS',cls:'c3',txt:'Subimos a 20 reps pero bajamos una serie temporalmente. Esto evita el colapso de volumen al aumentar las repeticiones. El esfuerzo percibido por serie sube considerablemente.'},
+    {ttl:'S4 — PICO DEL BLOQUE',cls:'c4',txt:'20 reps × 4 series. El tonelaje máximo. Las últimas 3–4 reps de cada serie deben ser al límite técnico. En el próximo bloque, sube el peso y vuelve a S1.'},
+  ],
+  intermedio: [
+    {ttl:'S1 — BASE HIPERTRÓFICA',cls:'c1',txt:'15 reps en la zona clásica de hipertrofia. RPE 7 significa que podrías hacer 3 reps más. Esta base permite acumular volumen sin acumular fatiga excesiva en la semana 1.'},
+    {ttl:'S2 — VOLUMEN ASCENDENTE',cls:'c2',txt:'+1 serie sube el volumen total un 33%. El intermedio puede absorber esta carga sin comprometer la recuperación. Mantén la cadencia: 2–0–2 (excéntrico–pausa–concéntrico).'},
+    {ttl:'S3 — SALTO A 20 REPS',cls:'c3',txt:'20 reps en aislados genera máximo estrés metabólico y acumulación de lactato. La reducción temporal de 1 serie es estratégica: absorber el salto de reps sin sobrepasar el volumen recuperable.'},
+    {ttl:'S4 — PICO METABÓLICO',cls:'c4',txt:'20 reps × 4 series. El músculo objetivo está bajo el mayor estrés metabólico del bloque. Controla el tempo, no hagas trampa. El burn muscular en las últimas reps es la señal correcta.'},
+  ],
+  avanzado: [
+    {ttl:'S1 — ACTIVACIÓN METABÓLICA',cls:'c1',txt:'15 reps al RPE 7–8 activa el músculo objetivo sin generar fatiga sistémica. El avanzado usa esta semana para refinar la conexión mente-músculo que maximiza la activación.'},
+    {ttl:'S2 — VOLUMEN ALTO',cls:'c2',txt:'4 series × 15 reps. El avanzado puede sostener 4 series desde la semana 2. El tonelaje acumulado en este día ya supera lo que un principiante hace en todo el bloque.'},
+    {ttl:'S3 — UMBRAL DE 20 REPS',cls:'c3',txt:'20 reps fuerza al músculo a reclutar fibras lentas y rápidas simultáneamente bajo estrés metabólico extremo. 3 series permite absorber este salto sin exceder la capacidad de recuperación del avanzado.'},
+    {ttl:'S4 — PICO DE 25 REPS',cls:'c4',txt:'25 reps es el límite superior del espectro hipertrófico efectivo (Schoenfeld 2017). A este nivel el músculo está completamente agotado. 4 series × 25 reps con peso controlado es uno de los estímulos más potentes para la hipertrofia de fibras tipo I.'},
+  ],
+};
+
+// ═══════════ VALIDATE ═══════════
+function validar() {
+  let ok = true;
+  const reqs = modo === 'compound'
+    ? [{id:'peso',eid:'err-peso'},{id:'series',eid:'err-series'},{id:'incremento',eid:'err-k'}]
+    : [{id:'peso-iso',eid:'err-peso-iso'},{id:'incremento-iso',eid:'err-k-iso'}];
+
+  reqs.forEach(({id,eid}) => {
+    const el = document.getElementById(id);
+    const v = parseFloat(el.value);
+    const invalid = !el.value || isNaN(v) || v <= 0 || (id==='series' && (v<1||v>10));
+    el.classList.toggle('invalid', invalid);
+    document.getElementById(eid).classList.toggle('show', invalid);
+    if (invalid) ok = false;
+  });
+  if (!nivel) { document.getElementById('err-nivel').classList.add('show'); ok = false; }
+  else document.getElementById('err-nivel').classList.remove('show');
+  return ok;
+}
+
+// ═══════════ GENERATE ═══════════
+function generar() {
+  if (!validar()) return;
+  if (modo === 'compound') generarCompuesto();
+  else generarAislado();
+  const res = document.getElementById('result');
+  res.classList.add('on');
+  setTimeout(() => res.scrollIntoView({behavior:'smooth',block:'start'}), 120);
+}
+
+// ─── COMPOUND ───
+function generarCompuesto() {
+  const P  = parseFloat(document.getElementById('peso').value);
+  const S  = parseInt(document.getElementById('series').value);
+  const K  = parseFloat(document.getElementById('incremento').value);
+  const u  = document.getElementById('unidad').value;
+  const ej = document.getElementById('ejercicio').value.trim() || 'Ejercicio';
+  const deload = document.getElementById('deload-tog').checked;
+  const cfg = COMP[nivel];
+
+  // Set header
+  document.getElementById('tabla-head').innerHTML = `<tr>
+    <th>Sem.</th><th>Día</th><th>Peso</th><th>Series × Reps</th><th>Tonelaje</th><th>RPE</th><th>Enfoque</th>
+  </tr>`;
+
+  const tbody = document.getElementById('tabla-body');
+  tbody.innerHTML = '';
+
+  let totalTon = 0, pesoMax = 0;
+  const pesosD1 = [];
+
+  cfg.semanas.forEach((s, i) => {
+    const pD1 = P + (i < 2 ? i : 2) * K;
+    const sD1 = S + s.serDeltaD1;
+    const rD1avg = avgReps(s.repsD1);
+    const tonD1 = +(pD1 * sD1 * rD1avg).toFixed(1);
+    pesosD1.push(pD1);
+    pesoMax = Math.max(pesoMax, pD1);
+    totalTon += tonD1;
+
+    const pD2raw = pD1 * (pct / 100);
+    const pD2 = roundToK(pD2raw, K);
+    const sD2 = S + s.serDeltaD2;
+    const rD2avg = avgReps(s.repsD2);
+    const tonD2 = +(pD2 * sD2 * rD2avg).toFixed(1);
+    totalTon += tonD2;
+
+    const isPeak = !!s.peak;
+
+    // Row D1
+    const r1 = document.createElement('tr');
+    r1.className = 'day1-row' + (isPeak ? ' peak-row' : '');
+    r1.innerHTML = `
+      <td><div class="wk">${i+1}<div class="wk-sub d1">DÍA 1</div></div></td>
+      <td><span style="font-family:var(--mono);font-size:10px;color:var(--accent);background:rgba(200,255,0,.08);border:1px solid rgba(200,255,0,.15);padding:2px 7px;border-radius:2px">FUERZA</span></td>
+      <td><span class="vbig">${pD1}</span><span class="vunit">${u}</span></td>
+      <td><span class="vbig">${sD1}</span><span class="vunit">×</span><span class="vbig">${s.repsD1}</span></td>
+      <td><span class="ton">${tonD1.toLocaleString()} <small>${u}</small></span></td>
+      <td><span class="rpe ${s.rpeClsD1}">RPE ${s.rpeD1}</span></td>
+      <td><span class="focus">${s.enfoqueD1}</span></td>`;
+    tbody.appendChild(r1);
+
+    // Row D2
+    const r2 = document.createElement('tr');
+    r2.className = 'day2-row' + (isPeak ? ' peak-row' : '');
+    r2.innerHTML = `
+      <td><div class="wk" style="color:transparent">.</div><div class="wk-sub d2">DÍA 2</div></td>
+      <td><span style="font-family:var(--mono);font-size:10px;color:var(--blue);background:rgba(77,159,255,.08);border:1px solid rgba(77,159,255,.15);padding:2px 7px;border-radius:2px">HIPERT.</span></td>
+      <td><span class="vbig">${pD2}</span><span class="vunit">${u}</span></td>
+      <td><span class="vbig">${sD2}</span><span class="vunit">×</span><span class="vbig">${s.repsD2}</span></td>
+      <td><span class="ton">${tonD2.toLocaleString()} <small>${u}</small></span></td>
+      <td><span class="rpe ${s.rpeClsD2}">RPE ${s.rpeD2}</span></td>
+      <td><span class="focus">${s.enfoqueD2}</span></td>`;
+    tbody.appendChild(r2);
+
+    // Separator
+    if (i < 3 || deload) {
+      const sep = document.createElement('tr');
+      sep.className = 'sem-separator';
+      sep.innerHTML = '<td colspan="7"></td>';
+      tbody.appendChild(sep);
+    }
+  });
+
+  // Deload
+  if (deload) {
+    const peakD1 = pesosD1[3];
+    const dlD1 = roundToK(peakD1 * 0.55, K);
+    const dlS  = Math.max(2, Math.ceil(S * 0.6));
+    const dlD2 = roundToK(dlD1 * (pct/100), K);
+
+    ['D1','D2'].forEach((d,di) => {
+      const p = di === 0 ? dlD1 : dlD2;
+      const rpe = di === 0 ? '4–5' : '4–5';
+      const reps = di === 0 ? '8' : '12';
+      const ton = +(p * dlS * parseInt(reps)).toFixed(1);
+      totalTon += ton;
+      const r = document.createElement('tr');
+      r.className = 'deload-row';
+      r.innerHTML = `
+        <td><div class="wk">5<div class="wk-sub deload">${d==='D1'?'DÍA 1':'DÍA 2'}</div></div></td>
+        <td><span style="font-family:var(--mono);font-size:10px;color:var(--blue);background:rgba(77,159,255,.07);border:1px solid rgba(77,159,255,.15);padding:2px 7px;border-radius:2px">DELOAD</span></td>
+        <td><span class="vbig">${p}</span><span class="vunit">${u}</span></td>
+        <td><span class="vbig">${dlS}</span><span class="vunit">×</span><span class="vbig">${reps}</span></td>
+        <td><span class="ton">${ton.toLocaleString()} <small>${u}</small></span></td>
+        <td><span class="rpe rpe-dl">RPE ${rpe}</span></td>
+        <td><span class="focus">${d==='D1'?'Descarga — mantener patrón':'Descarga — flujo sanguíneo'}</span></td>`;
+      tbody.appendChild(r);
+    });
+  }
+
+  // Stats
+  renderStats([
+    {lbl:'Semanas',val: deload ? 5 : 4, sub: deload ? 'con deload' : 'sin deload'},
+    {lbl:'Peso Máximo D1',val: pesoMax, sub: u + ' semana pico'},
+    {lbl:'Peso Máximo D2',val: roundToK(pesoMax*(pct/100),K), sub: u + ' al ' + pct + '%'},
+    {lbl:'Tonelaje Total',val: (Math.round(totalTon/100)/10) + 'k', sub: u + ' acumulados'},
+  ]);
+
+  // Tags
+  document.getElementById('res-ej').textContent = ej;
+  setLevelTag();
+  document.getElementById('res-mode-tag').className = 'tag tag-iso';
+  document.getElementById('res-mode-tag').textContent = '🏋️ FREC. 2 — COMP.';
+
+  // Notes
+  const notas = [...cfg.notas];
+  if (deload) notas.push({ttl:'S5 — DELOAD OBLIGATORIO',cls:'c5',txt:'El deload no es opcional para la frecuencia 2. Dos días de trabajo por semana durante 4 semanas genera fatiga neural y muscular acumulada que solo se puede asimilar con descarga. Reducimos al 55% del peso, 60% del volumen. Duerme, come y recupera — aquí es donde creces.'});
+  renderNotas(notas, true);
+}
+
+// ─── ISOLATED ───
+function generarAislado() {
+  const P  = parseFloat(document.getElementById('peso-iso').value);
+  const K  = parseFloat(document.getElementById('incremento-iso').value);
+  const u  = document.getElementById('unidad-iso').value;
+  const ej = document.getElementById('ejercicio').value.trim() || 'Ejercicio';
+  const deload = document.getElementById('deload-tog').checked;
+  const reps = ISO_REPS[nivel];
+  const rpe  = ISO_RPE[nivel];
+
+  document.getElementById('tabla-head').innerHTML = `<tr>
+    <th>Sem.</th><th>Tipo</th><th>Peso</th><th>Series × Reps</th><th>Tonelaje</th><th>RPE</th><th>Enfoque</th>
+  </tr>`;
+
+  const tbody = document.getElementById('tabla-body');
+  tbody.innerHTML = '';
+
+  let totalTon = 0;
+  const semDefs = [
+    {r:reps.s1, s:ISO_SERIES.s1, rpeVal:rpe[0], rpeCls:rpe[1]},
+    {r:reps.s2, s:ISO_SERIES.s2, rpeVal:rpe[2], rpeCls:rpe[3]},
+    {r:reps.s3, s:ISO_SERIES.s3, rpeVal:rpe[4], rpeCls:rpe[5]},
+    {r:reps.s4, s:ISO_SERIES.s4, rpeVal:rpe[6], rpeCls:rpe[7]},
+  ];
+
+  semDefs.forEach((sd, i) => {
+    const ton = +(P * sd.s * sd.r).toFixed(1);
+    totalTon += ton;
+    const isPeak = i === 3;
+    const tr = document.createElement('tr');
+    tr.className = isPeak ? 'peak-row' : '';
+    if (isPeak) tr.style.cssText += 'border-left:3px solid var(--accent2);';
+    tr.innerHTML = `
+      <td><div class="wk">${i+1}<div class="wk-sub iso">AISLADO</div></div></td>
+      <td><span style="font-family:var(--mono);font-size:10px;color:var(--blue);background:rgba(77,159,255,.08);border:1px solid rgba(77,159,255,.15);padding:2px 7px;border-radius:2px">HIPERT.</span></td>
+      <td><span class="vbig">${P}</span><span class="vunit">${u}</span></td>
+      <td><span class="vbig">${sd.s}</span><span class="vunit">×</span><span class="vbig">${sd.r}</span></td>
+      <td><span class="ton">${ton.toLocaleString()} <small>${u}</small></span></td>
+      <td><span class="rpe ${sd.rpeCls}">RPE ${sd.rpeVal}</span></td>
+      <td><span class="focus">${ISO_ENFOQUE[i]}</span></td>`;
+    tbody.appendChild(tr);
+
+    if (i < 3 || deload) {
+      const sep = document.createElement('tr');
+      sep.className = 'sem-separator';
+      sep.innerHTML = '<td colspan="7"></td>';
+      tbody.appendChild(sep);
+    }
+  });
+
+  if (deload) {
+    const dlP = roundToK(P * 0.6, K);
+    const ton = +(dlP * 2 * 15).toFixed(1);
+    totalTon += ton;
+    const dr = document.createElement('tr');
+    dr.className = 'deload-row';
+    dr.innerHTML = `
+      <td><div class="wk">5<div class="wk-sub deload">DELOAD</div></div></td>
+      <td><span style="font-family:var(--mono);font-size:10px;color:var(--blue);background:rgba(77,159,255,.07);border:1px solid rgba(77,159,255,.15);padding:2px 7px;border-radius:2px">DELOAD</span></td>
+      <td><span class="vbig">${dlP}</span><span class="vunit">${u}</span></td>
+      <td><span class="vbig">2</span><span class="vunit">×</span><span class="vbig">15</span></td>
+      <td><span class="ton">${ton.toLocaleString()} <small>${u}</small></span></td>
+      <td><span class="rpe rpe-dl">RPE 4–5</span></td>
+      <td><span class="focus">Descarga activa — flujo</span></td>`;
+    tbody.appendChild(dr);
+  }
+
+  // Stats
+  const tonMax = P * ISO_SERIES.s4 * reps.s4;
+  renderStats([
+    {lbl:'Semanas',val: deload ? 5 : 4, sub: deload ? 'con deload' : 'sin deload'},
+    {lbl:'Reps Máx.',val: reps.s4, sub: 'en semana 4'},
+    {lbl:'Tonelaje Pico',val: Math.round(tonMax), sub: u + ' sem. 4'},
+    {lbl:'Próximo Bloque',val: '+' + K, sub: u + ' de incremento'},
+  ]);
+
+  document.getElementById('res-ej').textContent = ej;
+  setLevelTag();
+  document.getElementById('res-mode-tag').className = 'tag tag-iso';
+  document.getElementById('res-mode-tag').textContent = '💪 AISLADO — DOBLE PROG.';
+
+  const notas = [...ISO_NOTAS[nivel]];
+  if (deload) notas.push({ttl:'S5 — DELOAD AISLADOS',cls:'c5',txt:'Para los ejercicios aislados el deload es más sencillo: 2 series de 15 reps al 60% del peso. El objetivo no es estimular sino mantener el rango articular activo y drenar la fatiga acumulada. El próximo bloque comienza con +K de peso desde la semana 1.'});
+  renderNotas(notas, false);
+}
+
+// ─── HELPERS ───
+function avgReps(r) {
+  if (r.includes('–')) {
+    const [a,b] = r.split('–').map(Number);
+    return (a + b) / 2;
+  }
+  return parseInt(r);
+}
+
+function renderStats(items) {
+  document.getElementById('stats-bar').innerHTML = items.map(it => `
+    <div class="stat">
+      <div class="stat-lbl">${it.lbl}</div>
+      <div class="stat-val">${it.val}</div>
+      <div class="stat-sub">${it.sub}</div>
+    </div>`).join('');
+}
+
+function setLevelTag() {
+  const t = document.getElementById('res-lvl');
+  const map = {
+    principiante:{cls:'tag-lvl-p',txt:'🌱 Principiante'},
+    intermedio:  {cls:'tag-lvl-i',txt:'🔥 Intermedio'},
+    avanzado:    {cls:'tag-lvl-a',txt:'⚡ Avanzado'},
+  };
+  t.className = 'tag ' + map[nivel].cls;
+  t.textContent = map[nivel].txt;
+}
+
+function renderNotas(notas, isCompound) {
+  document.getElementById('notas-body').innerHTML = notas.map((n, i) => `
+    <div class="note-row">
+      <div class="note-wk"><span>${isCompound ? (i < notas.length-1 || !document.getElementById('deload-tog').checked ? 'S'+(Math.floor(i/2)+1) : 'S5') : 'S'+(i+1)}</span></div>
+      <div class="note-cnt">
+        <div class="note-ttl ${n.cls}">${n.ttl}</div>
+        <div class="note-txt">${n.txt}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ═══════════ CLEAR ═══════════
+function limpiar() {
+  ['peso','series','incremento','peso-iso','incremento-iso','ejercicio'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.value=''; el.classList.remove('invalid'); delete el.dataset.edited; }
+  });
+  ['err-peso','err-series','err-k','err-nivel','err-peso-iso','err-k-iso'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('show');
+  });
+  document.querySelectorAll('.lvl-btn').forEach(b => b.classList.remove('active'));
+  nivel = null;
+  document.getElementById('k-hint').textContent = '';
+  document.getElementById('k-hint-iso').textContent = '';
+  document.getElementById('deload-tog').checked = true;
+  document.getElementById('pct-slider').value = 75;
+  updatePct(75);
+  document.getElementById('result').classList.remove('on');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ═══════════ COPY ═══════════
+function copiar() {
+  const rows = document.querySelectorAll('#tabla tr');
+  const lines = [];
+  rows.forEach(r => {
+    const cells = [...r.querySelectorAll('th,td')];
+    lines.push(cells.map(c => c.innerText.replace(/\n/g,' ').trim()).join('\t'));
+  });
+  navigator.clipboard.writeText(lines.join('\n')).then(() => {
+    const b = document.getElementById('btn-copy');
+    b.classList.add('ok');
+    b.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> ¡Copiado!`;
+    setTimeout(() => {
+      b.classList.remove('ok');
+      b.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar tabla`;
+    }, 2500);
+  });
+}
+</script>
+</body>
+</html>
